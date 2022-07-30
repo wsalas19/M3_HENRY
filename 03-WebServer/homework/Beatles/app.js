@@ -1,5 +1,6 @@
 var http = require("http");
 var fs = require("fs");
+const { isGeneratorFunction } = require("util/types");
 
 var beatles = [
 	{
@@ -28,49 +29,79 @@ var beatles = [
 	},
 ];
 
-let separate = (name) => {
-	return name.split(" ");
-};
-
-let nameChecker = (name) => {
-	beatles.forEach((b) => {
-		if (b.name === name) {
-			return b;
-		} else {
-			throw new Error();
-		}
-	});
-};
-
 http
 	.createServer(function (req, res) {
-		//home-html
+		//ruta /api, devuelve obj beatles
+		if (req.url === "/api") {
+			res
+				.writeHead(200, { "Content-Type": "application/json" })
+				.end(JSON.stringify(beatles));
+		}
+		//ruta /api/name devuelve obj del beatle individual
+		if (req.url.substring(0, 5) === "/api/" && req.url.length > 5) {
+			//req.url example: john%20lennon, tienen que matchear John Lennon
+			let beatleReq = req.url.split("/").pop();
+			let beatlefound = beatles.find(
+				(b) =>
+					beatleReq.toLocaleLowerCase() ===
+					encodeURI(b.name.toLocaleLowerCase())
+			);
+
+			if (beatlefound) {
+				res
+					.writeHead(200, { "Content-Type": "application/json" })
+					.end(JSON.stringify(beatlefound));
+			} else {
+				res
+					.writeHead(404, { "Content-Type": "text/plain" })
+					.end("Sorry, nothing was found :C");
+			}
+		}
+		//ruta / retorna home pagina html
 		if (req.url === "/") {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			let html = fs.readFileSync(`${__dirname}/index.html`);
+			/* let html = fs.readFileSync(__dirname + "/index.html");
+			res.end(html); */
+			fs.createReadStream("./index.html").pipe(res);
+		}
+
+		//beatle html profile page
+
+		let beatleReq = req.url.split("/").pop();
+		let beatlefound = beatles.find(
+			(b) =>
+				beatleReq.toLocaleLowerCase() === encodeURI(b.name.toLocaleLowerCase())
+		);
+
+		/* if (beatlefound) {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			let html = fs.readFile(__dirname + "/beatle.html");
+			html.replace(/{name}/g, beatlefound.name);
+			html.replace("{birthday}", beatlefound.birthdate);
+			html.replace("{url}", beatlefound.profilePic);
 			res.end(html);
-		}
-
-		//obj beatles-json
-		if (req.url === "/api") {
-			res.writeHead(200, { "Content-Type": "application/json" }); //Vamos a devolver texto en formato JSON
-			res.end(JSON.stringify(beatles)); //Antes de enviar el objeto, debemos parsearlo y transformarlo a un string JSON
-		}
-
-		//obj individual beatle-json
-		if (req.url.substring(0, 1) === "/api" && req.url.length > 5) {
-			let beatleInfo = req.url.split("/").pop().split("%20").join(" ");
-			let found = beatles.find((b) => beatleInfo === b.name);
-			if (found) {
-				res.writeHead(200, { "Content-Type": "application/json" });
-				res.end(JSON.stringify(found));
-			} else {
-				res.writeHead(404, { "Content-Type": "application/json" });
-				res.end("beatle not found!");
-			}
 		} else {
-			res.writeHead(404, { "Content-Type": "application/json" }); //Ponemos el status del response a 404: Not Found
-			res.end("beatle not found!"); //No devolvemos nada más que el estado.
-		}
+			res
+				.writeHead(404, { "Content-Type": "text/plain" })
+				.end("Sorry, nothing was found :C");
+		} */
+
+		//-----------------------------------------------------------------------------
+		/* let searchedBeatle = req.url.split("/").pop(); // john%20lennon
+		let foundBeatle = beatles.find(
+			(beatle) =>
+				searchedBeatle.toLowerCase() === encodeURI(beatle.name.toLowerCase())
+		); //"John Lennon"
+		if (foundBeatle) {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			let html = fs.readFileSync(`${__dirname}/beatle.html`, "utf-8");
+			html = html.replace(/{name}/g, foundBeatle.name);
+			html = html.replace("{birthday}", foundBeatle.birthdate);
+			html = html.replace("{url}", foundBeatle.profilePic);
+			res.end(html);
+		} else {
+			res.writeHead(404, { "Content-Type": "text/plain" });
+			res.end("No se encontro un Beatle!");
+		} */
 	})
-	.listen(3001);
+	.listen(3000);
