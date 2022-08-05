@@ -1,0 +1,15 @@
+{
+	"post": {
+		"author": "Autor del Post",
+		"title": "Titulo del Post",
+		"contents": "Contenido del Post"
+	},
+	"put": {
+		"id": 1,
+		"title": "Titulo del Post",
+		"contents": "Contenido del Post"
+	},
+	"delete": {
+		"id": 1
+	}
+}
